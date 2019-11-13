@@ -11,12 +11,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "ejs": "^2.7.1",
     "express": "^4.17.1",
+    "mangodb": "^1.0.0",
     "moment": "^2.24.0",
+    "mongodb": "^3.3.4",
     "pg": "^7.12.1"
   },
   "devDependencies": {
-    "nodemon": "^1.19.3"
+    "nodemon": "^1.19.4"
   }
 }

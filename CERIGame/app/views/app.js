@@ -1,11 +1,10 @@
 var myApp = angular.module('myApp', ['ngRoute']);
 
-console.log("Hello bro yay");
+var activeUserName = "Rien";
 
 
 myApp.config(function ($routeProvider) {
 
-	console.log("Hello bro yay");
 
 	$routeProvider
 
@@ -16,7 +15,17 @@ myApp.config(function ($routeProvider) {
 
 		.when('/home', {
 			templateUrl: 'home.html',
-			controller: 'loginController'
+			controller: 'homeController'
+		})
+
+		.when('/profil', {
+			templateUrl: 'profil.html',
+			controller: 'profilController'
+		})
+
+		.when('/quizz', {
+			templateUrl: 'quizz.html',
+			controller: 'quizzController'
 		})
 
 });
@@ -24,14 +33,13 @@ myApp.config(function ($routeProvider) {
 
 
 
-//console.log("Hello bro yay");
-
 myApp.controller('mainController', function ($scope) {
 	$scope.lol = "lol";
 });
 
 
-myApp.controller('loginController', ['$scope', '$http', function ($scope, $http) {
+myApp.controller('loginController', ['$scope', '$http', '$location', function ($scope, $http, $location) {
+	$scope.validation = false;
 	$scope.infoLogin = {};
 
 	$scope.login = function (user) {
@@ -42,7 +50,16 @@ myApp.controller('loginController', ['$scope', '$http', function ($scope, $http)
 
 		$http.post('api/login', data)
 			.then(function (response) {
-				$scope.validation = response.data;
+				console.log(response.data);
+				if (!Object.keys(response.data).length) {
+					$scope.validation = false;
+				} else {
+					$scope.validation = true;
+					activeUserName = response.data[0].identifiant;
+					$scope.activeUserNameLogin = response.data[0].identifiant;
+					console.log(activeUserName);
+					$location.path('/home');
+				}
 			});
 	};
 }]);
@@ -50,7 +67,26 @@ myApp.controller('loginController', ['$scope', '$http', function ($scope, $http)
 
 
 
-myApp.controller('LogController', ['$scope', '$log', function ($scope, $log) {
-	$scope.$log = $log;
-	$scope.message = 'Hello World!';
+myApp.controller('homeController', ['$scope', function ($scope) {
+	$scope.activeUserNameHome = activeUserName;
+}]);
+
+myApp.controller('profilController', ['$scope', function ($scope) {
+	$scope.message = 'Hello profilController!';
+}]);
+
+myApp.controller('quizzController', ['$scope', function ($scope) {
+
+	$scope.activeQuestion = "This is the question";
+
+	$scope.listAnswer = [{
+		id: 1,
+		text: "Answer 1"
+	}, {
+		id: 2,
+		text: "Answer 2"
+	}, {
+		id: 3,
+		text: "Answer 3"
+	}]
 }]);

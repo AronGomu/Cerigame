@@ -4,6 +4,7 @@ const express = require("express");
 const {
   Client
 } = require("pg"); // used to use pgsql with js
+const mongo = require('mongodb');
 const bodyParser = require('body-parser');
 const path = require("path"); //used for static directory path
 
@@ -13,12 +14,13 @@ const PORT = 3015;
 
 const app = express();
 
+
 ////console.log(path.join(__dirname, 'CERIGame/app/views'));
 
 // View Engine
 app.set(path.join(__dirname, 'CERIGame/app/views'));
-app.set('view engine', 'ejs');
-app.engine('html', require('ejs').renderFile);
+//app.set('view engine', 'ejs');
+//app.engine('html', require('ejs').renderFile);
 
 // Set Static Folder
 app.use(express.static(path.join(__dirname, 'CERIGame/app/views')));
@@ -38,15 +40,48 @@ app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 app.post('/api/login', function (request, response) {
   console.log("Body id : " + request.body.id);
   console.log("Body mdp : " + request.body.mdp);
+
+  var identifiant = request.body.id;
+  var motdepasse = request.body.mdp;
+
+  if (identifiant == null) {
+    console.log("ERREUR: Identifiant est null.");
+    return;
+  }
+
+  if (motdepasse == null) {
+    console.log("ERREUR: Motdepasse est null.");
+    return;
+  }
+
+  client = createClient();
+  client.connect()
+  client.query(`SELECT * from basic1 where identifiant='${identifiant}' and motpasse='${motdepasse}'`, (err, res) => {
+    response.send(res.rows);
+    client.end();
+  })
+
+  return;
+  /*
+  try {
+    console.log("Trying to use printTable function.");
+    await client.connect();
+    await client.query("BEGIN");
+    console.log("Connected successfully.");
+    results = await client.query(`select * from basic1 where identifiant='${id}' and motpasse='${mdp}'`);
+    console.log((results.rows));
+    await client.query("COMMIT");
+
+  } catch (e) {
+    console.log(`Something wrong happened ${e}`);
+    await client.query("ROLLBACK");
+  } finally {
+    await client.end();
+    console.log("Client disconnected successfully");
+  }
+  */
+
 });
-
-
-
-
-
-
-
-
 
 
 
@@ -62,6 +97,10 @@ function createClient() {
 
   return client;
 }
+
+
+
+
 
 
 async function printTable() {
