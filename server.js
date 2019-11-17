@@ -1,9 +1,7 @@
 console.log('Server Starting...');
 
 const express = require("express");
-const {
-  Client
-} = require("pg"); // used to use pgsql with js
+const db = require('./db_home.js');
 const mongo = require('mongodb');
 const bodyParser = require('body-parser');
 const path = require("path"); //used for static directory path
@@ -13,6 +11,8 @@ const path = require("path"); //used for static directory path
 const PORT = 3015;
 
 const app = express();
+
+const mongoUrl = "mongodb://localhost:27017/cerigame_db";
 
 
 ////console.log(path.join(__dirname, 'CERIGame/app/views'));
@@ -40,6 +40,7 @@ app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 app.post('/api/login', function (request, response) {
   console.log("Body id : " + request.body.id);
   console.log("Body mdp : " + request.body.mdp);
+  console.log("db.dbName : " + db.dbName);
 
   var identifiant = request.body.id;
   var motdepasse = request.body.mdp;
@@ -54,65 +55,53 @@ app.post('/api/login', function (request, response) {
     return;
   }
 
-  client = createClient();
+  client = db.createClient();
   client.connect()
-  client.query(`SELECT * from basic1 where identifiant='${identifiant}' and motpasse='${motdepasse}'`, (err, res) => {
+  client.query(`SELECT * from ${db.dbName} where identifiant='${identifiant}' and motpasse='${motdepasse}'`, (err, res) => {
     response.send(res.rows);
     client.end();
   })
 
   return;
-  /*
-  try {
-    console.log("Trying to use printTable function.");
-    await client.connect();
-    await client.query("BEGIN");
-    console.log("Connected successfully.");
-    results = await client.query(`select * from basic1 where identifiant='${id}' and motpasse='${mdp}'`);
-    console.log((results.rows));
-    await client.query("COMMIT");
-
-  } catch (e) {
-    console.log(`Something wrong happened ${e}`);
-    await client.query("ROLLBACK");
-  } finally {
-    await client.end();
-    console.log("Client disconnected successfully");
-  }
-  */
-
 });
 
 
+// Get questions from mangodb
+app.post('/api/getQuestions', function (request, response) {
+  console.log("Types of questions : " + request.body.difficulty);
 
+  if (request.body.difficulty == null) {
+    console.log("ERREUR: Identifiant est null.");
+    return;
+  }
 
-function createClient() {
-  const client = new Client({
-    user: "postgres",
-    password: "Cheerio!",
-    host: "localhost",
-    port: 5432, // It's 3015 on uni database
-    database: "basic"
+  client = mongo.MongoClient;
+  client.connect(mongoUrl, function (err, db) {
+    if (err) throw err;
+    var dbo = db.db("cerigame_db");
+    console.log("fetching easy_questions collection")
+    dbo.collection("easy_questions").find({}).toArray(function (err, result) {
+      if (err) throw err;
+      response.send(result);
+      db.close();
+    });
   });
 
-  return client;
-}
-
-
-
+  return;
+});
 
 
 
 async function printTable() {
 
-  client = createClient();
+  client = db.createClient();
 
   try {
     console.log("Trying to use printTable function.");
     await client.connect();
     await client.query("BEGIN");
     console.log("Connected successfully.");
-    const results = await client.query("select * from basic1");
+    const results = await client.query(`select * from ${db.dbName}`);
     console.log((results.rows));
     await client.query("COMMIT");
 

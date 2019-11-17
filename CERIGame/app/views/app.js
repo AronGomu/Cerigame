@@ -1,7 +1,5 @@
 var myApp = angular.module('myApp', ['ngRoute']);
 
-var activeUserName;
-
 
 myApp.config(function ($routeProvider) {
 
@@ -10,7 +8,7 @@ myApp.config(function ($routeProvider) {
 
 		.when('/', {
 			templateUrl: 'login.html',
-			controller: 'mainController'
+			controller: 'loginController'
 		})
 
 		.when('/home', {
@@ -36,14 +34,29 @@ myApp.config(function ($routeProvider) {
 });
 
 
-
-
 myApp.controller('mainController', function ($scope) {
-	$scope.lol = "lol";
+
+});
+
+myApp.controller('headerController', function ($scope, $location) {
+
+	console.log('hello there');
+
+	$scope.is_header = false;
+
+	$scope.logout = function () {
+		localStorage.removeItem('active_username');
+		$location.path('/');
+	}
 });
 
 
-myApp.controller('loginController', ['$scope', '$http', '$location', function ($scope, $http, $location) {
+myApp.controller('loginController', function ($scope, $http, $location) {
+
+	if (localStorage.getItem("active_username") != null) {
+		$location.path('/home');
+	}
+
 	$scope.validation = false;
 	$scope.infoLogin = {};
 
@@ -51,7 +64,7 @@ myApp.controller('loginController', ['$scope', '$http', '$location', function ($
 		$scope.infoLogin = angular.copy(user);
 		var data = angular.copy(user);
 
-		console.log(data);
+		console.log("data :" + data);
 
 		$http.post('api/login', data)
 			.then(function (response) {
@@ -62,95 +75,59 @@ myApp.controller('loginController', ['$scope', '$http', '$location', function ($
 					$scope.validation = true;
 					activeUserName = response.data[0].identifiant;
 					$scope.activeUserNameLogin = response.data[0].identifiant;
-					console.log(activeUserName);
+					localStorage.setItem("active_username", activeUserName);
+					console.log(localStorage.getItem("active_username"));
 					$location.path('/home');
 				}
 			});
 	};
-}]);
+});
 
 
 
 
-myApp.controller('homeController', ['$scope', '$location', function ($scope, $location) {
-	if (activeUserName == null) {
+myApp.controller('homeController', function ($scope, $location) {
+
+
+	if (localStorage.getItem("active_username") == null) {
 		$location.path('/');
 	}
 
-	$scope.activeUserNameHome = activeUserName;
-}]);
+	$scope.activeUserNameHome = localStorage.getItem("active_username");
+});
 
-myApp.controller('profilController', ['$scope', function ($scope) {
+myApp.controller('profilController', function ($scope) {
 
-	if (activeUserName == null) {
+	if (localStorage.getItem("active_username") == null) {
 		$location.path('/');
 	}
-}]);
+});
 
-myApp.controller('quizzController', ['$scope', '$location', function ($scope, $location) {
+myApp.controller('quizzController', function ($scope, $location, $http) {
 
-	if (activeUserName == null) {
+	if (localStorage.getItem("active_username") == null) {
 		$location.path('/');
 	}
 
-	$scope.listQuestions = [{
-			id: 1,
-			text: "This is the question 1",
-			listAnswer: [{
-				id: 1,
-				text: "Answer1 1",
-				is_answer: true
-			}, {
-				id: 2,
-				text: "Answer1 2",
-				is_answer: false
-			}, {
-				id: 3,
-				text: "Answer1 3",
-				is_answer: false
-			}]
-		},
-		{
-			id: 2,
-			text: "This is the question 2",
-			listAnswer: [{
-				id: 1,
-				text: "Answer2 1",
-				is_answer: true
-			}, {
-				id: 2,
-				text: "Answer2 2",
-				is_answer: false
-			}, {
-				id: 3,
-				text: "Answer2 3",
-				is_answer: false
-			}]
-		},
-		{
-			id: 3,
-			text: "This is the question 3",
-			listAnswer: [{
-				id: 1,
-				text: "Answer3 1",
-				is_answer: true
-			}, {
-				id: 2,
-				text: "Answer3 2",
-				is_answer: false
-			}, {
-				id: 3,
-				text: "Answer3 3",
-				is_answer: false
-			}]
-		},
-	]
+	$http.post('api/getQuestions', {
+			difficulty: 'easy'
+		})
+		.then(function (response) {
+			console.log(response.data);
+			if (!Object.keys(response.data).length) {
+				$scope.validation = false;
+				console.log("ERREUR")
+			} else {
+				$scope.validation = true;
+				$scope.listQuestions = response.data;
+				$scope.nbQuestions = $scope.listQuestions.length;
+			}
+		});
+
 
 	$scope.listAnswerOfUser = [];
 
 	$scope.activeQuestion = 1;
-
-	$scope.nbQuestions = $scope.listQuestions.length;
 
 	$scope.nbGoodAnswers = 0;
 
@@ -176,4 +153,4 @@ myApp.controller('quizzController', ['$scope', '$location', function ($scope, $l
 			$scope.is_end = true;
 		}
 	}
-}]);
+});
