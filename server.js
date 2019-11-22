@@ -6,6 +6,7 @@ const mongo = require("mongodb");
 const bodyParser = require("body-parser");
 const path = require("path"); //used for static directory path
 const sha1 = require("sha1");
+const moment = require('moment');
 
 const PORT = 3015;
 
@@ -36,10 +37,10 @@ app.use(bodyParser.json());
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
 // Get username and password from login page
-app.post("/api/login", function(request, response) {
+app.post("/api/login", function (request, response) {
   console.log("Body id : " + request.body.id);
   console.log("Body mdp : " + request.body.mdp);
-  console.log("db.dbName : " + db.dbName);
+  console.log("db.dbNameUsers : " + db.dbNameUsers);
 
   var identifiant = request.body.id;
   var motdepasse = request.body.mdp;
@@ -56,7 +57,7 @@ app.post("/api/login", function(request, response) {
 
   console.log(
     `SELECT * from ${
-      db.dbName
+      db.dbNameUsers
     } where identifiant='${identifiant}' and motpasse='${sha1(motdepasse)}'`
   );
 
@@ -64,7 +65,7 @@ app.post("/api/login", function(request, response) {
   client.connect();
   client.query(
     `SELECT * from ${
-      db.dbName
+      db.dbNameUsers
     } where identifiant='${identifiant}' and motpasse='${sha1(motdepasse)}'`,
     (err, res) => {
       response.send(res.rows);
@@ -76,7 +77,7 @@ app.post("/api/login", function(request, response) {
 });
 
 // Get questions from mangodb
-app.post("/api/getQuestions", function(request, response) {
+app.post("/api/getQuestions", function (request, response) {
   console.log("Types of questions : " + request.body.difficulty);
 
   if (request.body.difficulty == null) {
@@ -85,7 +86,7 @@ app.post("/api/getQuestions", function(request, response) {
   }
 
   client = mongo.MongoClient;
-  client.connect(mongoUrl, function(err, db) {
+  client.connect(mongoUrl, function (err, db) {
     if (err) throw err;
     console.log("hello there");
     var dbo = db.db("db");
@@ -93,12 +94,42 @@ app.post("/api/getQuestions", function(request, response) {
     dbo
       .collection("quizz")
       .find({})
-      .toArray(function(err, result) {
+      .toArray(function (err, result) {
         if (err) throw err;
         response.send(result);
         db.close();
       });
   });
+
+  return;
+});
+
+// Quizz has ended, time to register info on pgsql
+app.post("api/quizzEnded", function (request, response) {
+  console.log("Body id : " + request.body.score);
+  var id = request.body.id
+  var nbAnswers = request.body.goodAnswer
+  var time = request.body.timer
+  var score = request.body.score
+
+  if (score == null) {
+    console.log("ERREUR: score est null.");
+    return;
+  }
+  if (id == null) {
+    console.log("ERREUR: id est null.");
+    return;
+  }
+
+  client = db.createClient();
+  client.connect();
+  client.query(
+    `INSERT INTO ${db.dbNameHistorique} VALUES (${id}, ${moment().format()}, ;`,
+    (err, res) => {
+      response.send(res.rows);
+      client.end();
+    }
+  );
 
   return;
 });
@@ -111,7 +142,7 @@ async function printTable() {
     await client.connect();
     await client.query("BEGIN");
     console.log("Connected successfully.");
-    const results = await client.query(`select * from ${db.dbName}`);
+    const results = await client.query(`select * from ${db.dbNameUsers}`);
     console.log(results.rows);
     await client.query("COMMIT");
   } catch (e) {

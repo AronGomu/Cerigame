@@ -1,7 +1,11 @@
 <div ng-include="'header.html'"></div>
 <div ng-controller="homeController">
-	Bienvenue {{activeUserNameHome}}
 
-	<a href="/#!/quizz"><button>Lancer une partie</button></a>
+
+	<h4>Bienvenue {{activeUserNameHome}}</h4>
+	<h4>Lancer une partie : </h4>
+	<button ng-click="goToQuizz('easy')" class="btn-lg btn-secondary">Facile</button>
+	<button ng-click="goToQuizz('medium')" class="btn-lg btn-secondary">Moyen</button>
+	<button ng-click="goToQuizz('hard')" class="btn-lg btn-secondary">Difficile</button>
 
 </div>

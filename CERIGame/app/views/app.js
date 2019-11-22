@@ -1,6 +1,6 @@
 var myApp = angular.module("myApp", ["ngRoute"]);
 
-myApp.config(function($routeProvider) {
+myApp.config(function ($routeProvider) {
   $routeProvider
 
     .when("/", {
@@ -29,20 +29,23 @@ myApp.config(function($routeProvider) {
     });
 });
 
-myApp.controller("mainController", function($scope) {});
+myApp.controller("mainController", function ($scope) {});
 
-myApp.controller("headerController", function($scope, $location) {
-  console.log("hello there");
+myApp.controller("headerController", function ($scope, $location) {
 
   $scope.is_header = false;
 
-  $scope.logout = function() {
+  $scope.GoToProfil = function () {
+    $location.path("/profil");
+  };
+
+  $scope.logout = function () {
     localStorage.removeItem("active_username");
     $location.path("/");
   };
 });
 
-myApp.controller("loginController", function($scope, $http, $location) {
+myApp.controller("loginController", function ($scope, $http, $location) {
   if (localStorage.getItem("active_username") != null) {
     $location.path("/home");
   }
@@ -50,43 +53,65 @@ myApp.controller("loginController", function($scope, $http, $location) {
   $scope.validation = false;
   $scope.infoLogin = {};
 
-  $scope.login = function(user) {
+  $scope.login = function (user) {
     $scope.infoLogin = angular.copy(user);
     var data = angular.copy(user);
 
-    console.log("data :" + data);
 
-    $http.post("api/login", data).then(function(response) {
-      console.log(response.data);
+    $http.post("api/login", data).then(function (response) {
       if (!Object.keys(response.data).length) {
         $scope.validation = false;
       } else {
         $scope.validation = true;
-        activeUserName = response.data[0].identifiant;
-        $scope.activeUserNameLogin = response.data[0].identifiant;
-        localStorage.setItem("active_username", activeUserName);
-        console.log(localStorage.getItem("active_username"));
+        localStorage.setItem("active_username", response.data[0].identifiant);
+        localStorage.setItem("id_user", response.data[0].id);
         $location.path("/home");
       }
     });
   };
 });
 
-myApp.controller("homeController", function($scope, $location) {
+myApp.controller("homeController", function ($scope, $location, $http) {
   if (localStorage.getItem("active_username") == null) {
     $location.path("/");
   }
 
+  ////// TEST ///////////
+  /*
+  $http.post("api/quizzEnded", {
+    id: 28,
+    nbGoodAnswers: 15,
+    time: 50,
+    score: 15 * 100 / 50,
+  }).then(function (response) {
+    console.log("Test");
+  });
+  */
+  /////////////////////
+
+  $scope.goToQuizz = function (difficulty) {
+    localStorage.setItem("difficulty", difficulty);
+    $location.path("/quizz");
+    // /#!/quizz
+  }
   $scope.activeUserNameHome = localStorage.getItem("active_username");
 });
 
-myApp.controller("profilController", function($scope) {
+myApp.controller("profilController", function ($scope) {
   if (localStorage.getItem("active_username") == null) {
     $location.path("/");
   }
+
+
+
+  $scope.visitedUser = {
+    name: localStorage.getItem("active_username"),
+    nbQuizzPlayed: 5,
+    bestScore: 100
+  }
 });
 
-myApp.controller("quizzController", function(
+myApp.controller("quizzController", function (
   $scope,
   $location,
   $http,
@@ -96,13 +121,13 @@ myApp.controller("quizzController", function(
     $location.path("/");
   }
 
-  $scope.difficulty = "easy";
+  $scope.score = 0;
+
+  $scope.difficulty = localStorage.getItem("difficulty");
 
   function createListAnswer(difficulty, index, listAnswer) {
-    console.log("Enter createListAnswer");
-    console.log(difficulty);
     listAnswerToReturn = listAnswer[index]["propositions"];
-
+    var nbLoop = -1
     nbAnswer = -1;
     if (difficulty == "easy") {
       nbLoop = 2;
@@ -125,7 +150,6 @@ myApp.controller("quizzController", function(
       ) {
         i--;
       } else {
-        console.log(listAnswerToReturn[indexWhereTodelete]);
         listAnswerToReturn.splice(indexWhereTodelete, 1);
       }
     }
@@ -137,17 +161,14 @@ myApp.controller("quizzController", function(
     .post("api/getQuestions", {
       difficulty: $scope.difficulty
     })
-    .then(function(response) {
-      console.log(response.data);
+    .then(function (response) {
       if (!Object.keys(response.data).length) {
         $scope.validation = false;
-        console.log("ERREUR");
       } else {
         $scope.validation = true;
         $scope.listOfListOfQuestions = response.data;
         $scope.listQuestions =
           $scope.listOfListOfQuestions[Math.floor(Math.random() * 11)]["quizz"];
-        console.log($scope.listQuestions);
         $scope.activeQuestion = 0;
         $scope.listAnswer = [];
 
@@ -157,19 +178,17 @@ myApp.controller("quizzController", function(
           $scope.listQuestions
         );
 
-        console.log($scope.listAnswer);
       }
     });
 
   $scope.listAnswerOfUser = [];
 
-  //$scope.nbGoodAnswers = 0;
   $scope.is_answered = false;
   $scope.is_not_answered = true;
   $scope.is_end = false;
 
-  $scope.reveal = function(answer) {
-    console.log("HELLO HELLO");
+  $scope.reveal = function (answer) {
+    console.log($scope.activeQuestion);
     $scope.listAnswerOfUser.push(answer);
     $scope.goodAnswer = $scope.listQuestions[$scope.activeQuestion]["réponse"];
     $scope.anecdote = $scope.listQuestions[$scope.activeQuestion]["anecdote"];
@@ -177,17 +196,15 @@ myApp.controller("quizzController", function(
     $scope.is_not_answered = false;
   };
 
-  $scope.nexto = function() {
+  $scope.nexto = function () {
     $scope.is_answered = false;
     $scope.is_not_answered = true;
     $scope.activeQuestion++;
     $scope.nbQuestions = $scope.listQuestions.length;
 
-    console.log("$scope.activeQuestion : " + $scope.activeQuestion);
-    console.log("$scope.listQuestions.length : " + $scope.listQuestions.length);
-
     // Script Fin du quizz
     if ($scope.activeQuestion >= $scope.listQuestions.length) {
+      $scope.stopTimer = true;
       $scope.nbGoodAnswers = 0;
       for (var i = 0; i < $scope.listQuestions.length; i++) {
         $scope.is_end = true;
@@ -196,6 +213,18 @@ myApp.controller("quizzController", function(
           $scope.nbGoodAnswers++;
         }
       }
+      $scope.score = Math.trunc($scope.nbGoodAnswers * 100 / $scope.timer);
+
+      // Sauvegarde des infos sur fredouil.historique par requête ajax
+      /*
+          $http.post("api/quizzEnded", {
+            id: localStorage.getItem("id_user"),
+            nbGoodAnswers: $scope.nbGoodAnswers,
+            time: $scope.timer,
+            score: $scope.score,
+          });
+        */
+
     } else {
       $scope.listAnswer = createListAnswer(
         $scope.difficulty,
@@ -205,9 +234,16 @@ myApp.controller("quizzController", function(
     }
   };
 
+  $scope.stopTimer = false;
   $scope.timer = 0;
-  $scope.addSecond = function() {
-    $scope.timer++;
-  };
+  $scope.addSecond = function () {
+    if ($scope.stopTimer == false) {
+      $scope.timer++;
+    }
+  }
   $interval($scope.addSecond, 1000);
+
+  function stopTimer() {
+    $interval.cancel($scope.addSecond);
+  }
 });

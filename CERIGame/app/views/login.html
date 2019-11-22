@@ -1,12 +1,11 @@
-<form novalidate class="login-form">
-	<label>Identifiant</label>
-	<input type="text" placeholder="Entre ton identifiant" ng-model="user.id">
-	<label for="">Mot de passe</label>
-	<input type="password" placeholder="Entre ton mot de passe" ng-model="user.mdp">
-	<input type="submit" ng-click="login(user)" value="Save" />
+<form novalidate>
+	<div class="form-group">
+		<label>Identifiant</label>
+		<input type="text" placeholder="Entre ton identifiant" ng-model="user.id">
+	</div>
+	<div class="form-group">
+		<label for="">Mot de passe</label>
+		<input type="password" placeholder="Entre ton mot de passe" ng-model="user.mdp">
+	</div>
+	<input type="submit" ng-click="login(user)" class="btn btn-primary" value="Save" />
 </form>
-
-<pre>user = {{user | json}}</pre>
-<pre>infoLogin = {{infoLogin | json}}</pre>
-<pre>validation = {{validation | json}}</pre>
-<pre>activeUserName  = {{activeUserNameLogin}}</pre>

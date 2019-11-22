@@ -1,4 +1,6 @@
-const { Client } = require("pg"); // used to use pgsql with js
+const {
+  Client
+} = require("pg"); // used to use pgsql with js
 
 function createClient() {
   const client = new Client({
@@ -12,7 +14,9 @@ function createClient() {
   return client;
 }
 
-const dbName = "fredouil.users";
+const dbNameUsers = "fredouil.users";
+const dbNameHistorique = "fredouil.historique";
 
 module.exports.createClient = createClient;
-module.exports.dbName = dbName;
+module.exports.dbNameUsers = dbNameUsers;
+module.exports.dbNameHistorique = dbNameHistorique;

@@ -1,26 +1,26 @@
 <div ng-include="'header.html'"></div>
 
-<p>Temps : {{ timer }}</p>
+<h3>Timer : {{ timer }}</h3>
 <div ng-switch="is_end">
-  <div g-switch-default="false">
+  <div ng-switch-default="false">
     <div ng-show="is_not_answered">
-      <p>Question : {{ listQuestions[activeQuestion].question }}</p>
-      <ul>
-        <li ng-repeat="answer in listAnswer">
-          <button ng-click="reveal(answer)">{{ answer }}</button>
-        </li>
+      <h2>Question : {{ listQuestions[activeQuestion].question }}</h2>
+      <div ng-repeat="answer in listAnswer">
+        <button ng-click="reveal(answer)" class="btn btn-primary">{{ answer }}</button>
+      </div>
       </ul>
     </div>
     <div ng-show="is_answered">
-      <p>La bonne réponse est : {{ goodAnswer }}</p>
-      <p>{{ anecdote }}</p>
-      <button ng-click="nexto()"></button>
+      <h2>La bonne réponse est : {{ goodAnswer }}</h2>
+      <h5>{{ anecdote }}</h5>
+      <button ng-click="nexto()" class="btn btn-primary">Question Suivante</button>
     </div>
   </div>
 
   <div ng-switch-when="true">
     <h2>Tu as terminé le quizz !</h2>
     <h3>Tu as {{ nbGoodAnswers }} sur {{ nbQuestions }}</h3>
-    <a href="/#!/home"><button>Retour Menu</button></a>
+    <h3>Ton score : {{ score }}</h3>
+    <a href="/#!/home"><button class="btn btn-primary">Retour Menu</button></a>
   </div>
 </div>
